@@ -1,0 +1,16 @@
+# Core (updated versions)
+langchain>=0.2.0
+langchain-openai>=0.1.0
+openai>=1.30.0
+
+# Database
+supabase>=2.4.0
+
+# Utilities
+python-dotenv>=1.0.0
+tiktoken>=0.7.0
+tqdm>=4.66.0
+
+# Markdown processing
+markdown>=3.5.0
+python-frontmatter>=1.0.0
