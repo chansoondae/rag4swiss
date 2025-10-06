@@ -185,6 +185,9 @@ export default function AdminDashboard() {
                     질문
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    AI 답변
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     응답 시간
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -203,6 +206,9 @@ export default function AdminDashboard() {
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
                       {log.user_question}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700 max-w-sm truncate">
+                      {log.ai_response ? log.ai_response.substring(0, 100) + '...' : '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {formatTime(log.response_time_ms)}
