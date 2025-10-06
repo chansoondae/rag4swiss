@@ -15,6 +15,17 @@ const SYSTEM_PROMPT = `당신은 스위스 여행 전문 AI 도우미입니다.
 사용자의 질문에 도움이 되는 답변을 제공하세요.`
 
 export async function POST(request) {
+  const startTime = Date.now()
+  let embeddingTime = 0
+  let searchTime = 0
+  let llmTime = 0
+  let errorOccurred = false
+  let errorMessage = ''
+  
+  // Extract user info
+  const userIP = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+  const userAgent = request.headers.get('user-agent') || 'unknown'
+  
   try {
     const { message } = await request.json()
 
@@ -26,14 +37,17 @@ export async function POST(request) {
     }
 
     // Generate embedding for the user's question
+    const embeddingStartTime = Date.now()
     const embeddingResponse = await openai.embeddings.create({
       model: 'text-embedding-ada-002',
       input: message.replace('\n', ' '),
     })
+    embeddingTime = Date.now() - embeddingStartTime
 
     const queryEmbedding = embeddingResponse.data[0].embedding
 
     // Search for relevant content in Supabase using vector similarity
+    const searchStartTime = Date.now()
     const { data: searchResults, error: searchError } = await supabase.rpc(
       'match_travel_content',
       {
@@ -42,6 +56,7 @@ export async function POST(request) {
         match_count: 3,
       }
     )
+    searchTime = Date.now() - searchStartTime
 
     if (searchError) {
       console.error('Supabase search error:', searchError)
@@ -76,6 +91,7 @@ export async function POST(request) {
     }
 
     // Generate response using OpenAI
+    const llmStartTime = Date.now()
     const chatResponse = await openai.chat.completions.create({
       model: 'gpt-4-turbo-preview',
       messages: [
@@ -97,8 +113,27 @@ ${context}
       temperature: 0.7,
       max_tokens: 1000,
     })
+    llmTime = Date.now() - llmStartTime
 
     const aiResponse = chatResponse.choices[0].message.content
+    const totalResponseTime = Date.now() - startTime
+
+    // Log the interaction
+    const similarityScores = sources.map(s => s.similarity)
+    await logChatInteraction({
+      userQuestion: message,
+      aiResponse,
+      sources,
+      similarityScores,
+      searchResultsCount: searchResults?.length || 0,
+      responseTimeMs: totalResponseTime,
+      embeddingTimeMs: embeddingTime,
+      searchTimeMs: searchTime,
+      llmTimeMs: llmTime,
+      userIp: userIP,
+      userAgent,
+      errorOccurred: false
+    })
 
     return NextResponse.json({
       response: aiResponse,
@@ -106,10 +141,64 @@ ${context}
     })
   } catch (error) {
     console.error('Chat API error:', error)
+    errorOccurred = true
+    errorMessage = error.message
+
+    // Log the error
+    try {
+      const totalResponseTime = Date.now() - startTime
+      await logChatInteraction({
+        userQuestion: message || 'Unknown',
+        aiResponse: '',
+        sources: [],
+        similarityScores: [],
+        searchResultsCount: 0,
+        responseTimeMs: totalResponseTime,
+        embeddingTimeMs: embeddingTime,
+        searchTimeMs: searchTime,
+        llmTimeMs: llmTime,
+        userIp: userIP,
+        userAgent,
+        errorOccurred: true,
+        errorMessage: errorMessage
+      })
+    } catch (logError) {
+      console.error('Logging error:', logError)
+    }
+
     return NextResponse.json(
       { error: '답변 생성 중 오류가 발생했습니다.' },
       { status: 500 }
     )
+  }
+}
+
+// Logging function
+async function logChatInteraction(data) {
+  try {
+    const { error } = await supabase
+      .from('chat_logs')
+      .insert({
+        user_question: data.userQuestion,
+        ai_response: data.aiResponse,
+        sources: JSON.stringify(data.sources),
+        similarity_scores: data.similarityScores,
+        search_results_count: data.searchResultsCount,
+        response_time_ms: data.responseTimeMs,
+        embedding_time_ms: data.embeddingTimeMs,
+        search_time_ms: data.searchTimeMs,
+        llm_time_ms: data.llmTimeMs,
+        user_ip: data.userIp,
+        user_agent: data.userAgent,
+        error_occurred: data.errorOccurred,
+        error_message: data.errorMessage
+      })
+
+    if (error) {
+      console.error('Failed to log chat interaction:', error)
+    }
+  } catch (err) {
+    console.error('Logging function error:', err)
   }
 }
 
