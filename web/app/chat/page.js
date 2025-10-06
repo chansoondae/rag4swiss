@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import ChatInterface from '../../components/ChatInterface'
 import MessageList from '../../components/MessageList'
 import InputBox from '../../components/InputBox'
 import LoadingIndicator from '../../components/LoadingIndicator'
 
-export default function ChatPage() {
+function ChatPageContent() {
   const [messages, setMessages] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -149,5 +149,20 @@ export default function ChatPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-2xl">🇨🇭</div>
+          <div className="mt-2 text-gray-600">채팅 페이지를 로딩 중...</div>
+        </div>
+      </div>
+    }>
+      <ChatPageContent />
+    </Suspense>
   )
 }
