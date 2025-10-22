@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { motion } from 'framer-motion'
 import ChatInterface from '../../components/ChatInterface'
 import MessageList from '../../components/MessageList'
 import InputBox from '../../components/InputBox'
@@ -102,45 +103,63 @@ function ChatPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-blue-900 via-purple-900 to-red-900">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute bottom-0 left-1/2 w-96 h-96 bg-red-500/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
+      </div>
+
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-4">
+      <header className="relative z-10 backdrop-blur-md bg-white/10 border-b border-white/20 sticky top-0">
+        <div className="max-w-5xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <span className="text-2xl">🇨🇭</span>
-              <h1 className="text-xl font-semibold text-gray-900">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex items-center space-x-3"
+            >
+              <span className="text-3xl animate-float">🇨🇭</span>
+              <h1 className="text-xl font-semibold text-white">
                 스위스 여행 AI 도우미
               </h1>
-            </div>
-            
-            <button
+            </motion.div>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => window.location.href = '/'}
-              className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              className="px-4 py-2 rounded-lg backdrop-blur-sm bg-white/10 border border-white/20
+                       text-white hover:bg-white/20 transition-all"
             >
               홈으로
-            </button>
+            </motion.button>
           </div>
         </div>
       </header>
 
       {/* Chat Container */}
-      <div className="max-w-4xl mx-auto h-[calc(100vh-80px)] flex flex-col">
+      <div className="relative z-10 max-w-5xl mx-auto h-[calc(100vh-80px)] flex flex-col px-4">
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto px-4 py-6">
+        <div className="flex-1 overflow-y-auto py-6 space-y-4">
           <MessageList messages={messages} />
           {isLoading && (
-            <div className="chat-message assistant">
-              <div className="message-bubble assistant">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex justify-start"
+            >
+              <div className="max-w-xs lg:max-w-md p-4 rounded-2xl backdrop-blur-lg bg-white/10 border border-white/20">
                 <LoadingIndicator />
               </div>
-            </div>
+            </motion.div>
           )}
           <div ref={messagesEndRef} />
         </div>
 
         {/* Input Area */}
-        <div className="border-t border-gray-200 bg-white px-4 py-4">
+        <div className="pb-6 pt-4">
           <InputBox
             onSendMessage={handleSendMessage}
             disabled={isLoading}
