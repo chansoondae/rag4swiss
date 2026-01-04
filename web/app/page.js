@@ -28,12 +28,20 @@ export default function HomePage() {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center space-x-3"
+            className="flex items-center justify-between"
           >
-            <span className="text-4xl animate-float">🇨🇭</span>
-            <h1 className="text-2xl font-bold text-white">
-              스위스 여행 AI 도우미
-            </h1>
+            <div className="flex items-center space-x-3">
+              <span className="text-4xl animate-float">🇨🇭</span>
+              <h1 className="text-2xl font-bold text-white">
+                스위스 여행 AI 도우미
+              </h1>
+            </div>
+            <Link
+              href="/contents"
+              className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium text-sm transition-all duration-200"
+            >
+              Contents
+            </Link>
           </motion.div>
         </div>
       </header>
